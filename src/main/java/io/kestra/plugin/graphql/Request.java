@@ -205,7 +205,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         try (HttpClient client = this.client(runContext)) {
             HttpRequest request = request(runContext);
 
-            HttpResponse<Byte[]> response = client.request(request, Byte[].class);
+            HttpResponse<byte[]> response = client.request(request, byte[].class);
 
             String body = null;
 
