@@ -6,7 +6,6 @@ import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
-import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.common.EncryptedString;
@@ -25,7 +24,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +40,7 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Plugin(
     examples = {
         @Example(
-            title = "Make a GraphQL request with a query and variables.",
+            title = "Make a GraphQL query with variables",
             full = true,
             code = """
                 id: graphql_request
@@ -50,56 +48,131 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 
                 tasks:
                   - id: graphql_query
-                    type: io.kestra.plugin.core.graphql.Request
+                    type: io.kestra.plugin.graphql.Request
                     uri: https://example.com/graphql
-                    method: POST
-                    contentType: application/json
-                    body: |
-                      {
-                        "query": "query GetUser($userId: ID!) { user(id: $userId) { name email } }",
-                        "variables": { "userId": "12345" }
+                    query: |
+                      query GetUser($userId: ID!) {
+                        user(id: $userId) {
+                          name
+                          email
+                        }
+                      }
+                    variables:
+                      userId: "12345"
+                """
+        ),
+        @Example(
+            title = "Execute a GraphQL query with authentication",
+            full = true,
+            code = """
+                id: graphql_with_auth
+                namespace: company.team
+
+                tasks:
+                  - id: get_data
+                    type: io.kestra.plugin.graphql.Request
+                    uri: https://example.com/graphql
+                    headers:
+                      Authorization: "Bearer {{ secret('API_TOKEN') }}"
+                    query: |
+                      query {
+                        viewer {
+                          name
+                          email
+                        }
                       }
                 """
         ),
+        @Example(
+            title = "Execute a GraphQL query with operationName",
+            full = true,
+            code = """
+                id: graphql_with_operation_name
+                namespace: company.team
+
+                tasks:
+                  - id: get_data
+                    type: io.kestra.plugin.graphql.Request
+                    uri: https://example.com/graphql
+                    query: |
+                      query GetUser {
+                        user(id: "1") {
+                          name
+                        }
+                      }
+
+                      query GetPosts {
+                        posts {
+                          title
+                        }
+                      }
+                    operationName: "GetUser"
+                """
+        )
     }
 )
 public class Request extends AbstractHttp implements RunnableTask<Request.Output> {
 
     @Builder.Default
     @Schema(
-        title = "If true, the GraphQL response body will be automatically encrypted and decrypted in the outputs, provided that encryption is configured in your Kestra configuration.",
+        title = "If true, the GraphQL response body will be automatically encrypted and decrypted in the outputs.",
         description = "If this property is set to `true`, this task will output the request body using the `encryptedBody` output property; otherwise, the request body will be stored in the `body` output property."
     )
     private Property<Boolean> encryptBody = Property.of(false);
 
     @Schema(
-        title =  "GraphQL query to execute."
+        title = "GraphQL query or mutation to execute."
     )
     @NotNull
     private Property<String> query;
 
     @Schema(
-        title = "Variables used in the query."
+        title = "Variables used in the query.",
+        description = "GraphQL variables can be complex objects with nested structures."
     )
-    private Property<Map<String, String>> variables = Property.of(new HashMap<>());
+    private Property<Map<String, Object>> variables;
 
+    @Schema(
+        title = "Operation name for the GraphQL query",
+        description = "Used when multiple operations are defined in the query document."
+    )
+    private Property<String> operationName;
+
+    @Builder.Default
+    protected Property<String> method = Property.of("POST");
+
+    @Builder.Default
+    @Schema(
+        title = "Fail task on GraphQL errors",
+        description = "If true, the task will fail when GraphQL returns errors in the response."
+    )
+    private Property<Boolean> failOnGraphQLErrors = Property.of(false);
 
     @Override
     protected HttpRequest request(RunContext runContext) throws IllegalVariableEvaluationException, URISyntaxException, IOException {
+
         String renderedUri = runContext.render(this.uri).as(String.class).map(s -> s.replace(" ", "%20")).orElseThrow();
+        String methodName = runContext.render(this.method).as(String.class).orElse("POST");
 
         HttpRequest.HttpRequestBuilder requestBuilder = HttpRequest.builder()
-            .method(runContext.render(this.method).as(String.class).orElse("POST"))
-            .uri(new URI(renderedUri));
+            .method(methodName)
+            .uri(URI.create(renderedUri));
 
-        String renderedBody = runContext.render(this.query).as(String.class).orElseThrow();
+        String renderedQuery = runContext.render(this.query).as(String.class).orElseThrow();
 
         Map<String, Object> requestPayload = new HashMap<>();
-        requestPayload.put("query", renderedBody);
+        requestPayload.put("query", renderedQuery);
 
-        if (variables!=null){
-            Map<String,String> renderedVariables = runContext.render(variables).asMap(String.class, String.class);
+        if (variables != null) {
+            Object renderedVariables = runContext.render(variables).asMap(String.class, Object.class);
             requestPayload.put("variables", renderedVariables);
+        }
+
+        if (operationName != null) {
+            String renderedOpName = runContext.render(operationName).as(String.class).orElse(null);
+            if (renderedOpName != null && !renderedOpName.isEmpty()) {
+                requestPayload.put("operationName", renderedOpName);
+            }
         }
 
         requestBuilder.body(HttpRequest.JsonRequestBody.builder()
@@ -128,6 +201,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
 
     @Override
     public Output run(RunContext runContext) throws Exception {
+
         try (HttpClient client = this.client(runContext)) {
             HttpRequest request = request(runContext);
 
@@ -152,11 +226,12 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
     }
 
     @SuppressWarnings("unchecked")
-    public Output output(RunContext runContext, HttpRequest request, HttpResponse<Byte[]> response, String body) throws GeneralSecurityException, URISyntaxException, IOException, IllegalVariableEvaluationException {
+    public Output output(RunContext runContext, HttpRequest request, HttpResponse<Byte[]> response, String body) throws Exception {
         boolean encrypt = runContext.render(this.encryptBody).as(Boolean.class).orElse(false);
 
         Object errors = null;
         Object data = null;
+        Map<String, Object> extractedData = new HashMap<>();
 
         if (body != null && !body.isEmpty()) {
             Map<String, Object> jsonResponse = JacksonMapper.ofJson().readValue(body, Map.class);
@@ -167,6 +242,10 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
 
             if (jsonResponse.containsKey("errors")) {
                 errors = jsonResponse.get("errors");
+
+                if (errors != null && runContext.render(failOnGraphQLErrors).as(Boolean.class).orElse(false)) {
+                    throw new Exception("GraphQL query failed with errors: " + errors);
+                }
             }
         }
 
@@ -191,23 +270,23 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         private final Integer code;
 
         @Schema(title = "The headers of the response.")
-        @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The body of the response.",
-            description = "Kestra will by default store the task output using this property. However, if the `encryptBody` property is set to `true`, Kestra will instead encrypt the output and store it using the `encryptedBody` output property."
+            title = "The GraphQL data field from the response.",
+            description = "Contains the data returned by the GraphQL server. If the `encryptBody` property is set to `true`, this will be null and the data will be in `encryptedBody`."
         )
         private Object body;
 
         @Schema(
-            title = "The Errors of the response."
+            title = "The GraphQL errors from the response.",
+            description = "Contains any errors returned by the GraphQL server."
         )
         private Object error;
 
         @Schema(
             title = "The encrypted body of the response.",
-            description = "If the `encryptBody` property is set to `true`, Kestra will automatically encrypt the output before storing it, and decrypt it when the output is retrieved in a downstream task."
+            description = "If the `encryptBody` property is set to `true`, this will contain the encrypted response."
         )
         private EncryptedString encryptedBody;
     }
