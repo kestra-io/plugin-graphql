@@ -16,8 +16,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -205,33 +203,30 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         try (HttpClient client = this.client(runContext)) {
             HttpRequest request = request(runContext);
 
-            HttpResponse<byte[]> response = client.request(request, byte[].class);
+            HttpResponse<String> response = client.request(request, String.class);
 
-            String body = null;
+            String responseBody = response.getBody();
 
-            if (response.getBody() != null) {
-                body = IOUtils.toString(ArrayUtils.toPrimitive(response.getBody()), StandardCharsets.UTF_8.name());
-            }
-
-            if (body != null) {
-                OptionalInt illegalChar = body.chars().filter(c -> !Character.isDefined(c)).findFirst();
+            runContext.logger().debug("GraphQL response: {}", responseBody);
+            
+            if (responseBody != null) {
+                OptionalInt illegalChar = responseBody.chars().filter(c -> !Character.isDefined(c)).findFirst();
                 if (illegalChar.isPresent()) {
                     throw new IllegalArgumentException("Illegal unicode code point in response body: " + illegalChar.getAsInt() +
                         ", the Request task only supports valid Unicode strings as the response body.");
                 }
             }
 
-            return this.output(runContext, request, response, body);
+            return this.output(runContext, request, response, responseBody);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public Output output(RunContext runContext, HttpRequest request, HttpResponse<Byte[]> response, String body) throws Exception {
+    public Output output(RunContext runContext, HttpRequest request, HttpResponse<String> response, String body) throws Exception {
         boolean encrypt = runContext.render(this.encryptBody).as(Boolean.class).orElse(false);
 
         Object errors = null;
         Object data = null;
-        Map<String, Object> extractedData = new HashMap<>();
 
         if (body != null && !body.isEmpty()) {
             Map<String, Object> jsonResponse = JacksonMapper.ofJson().readValue(body, Map.class);
