@@ -39,9 +39,9 @@ class RequestTest {
         );
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("query GetUser($id: ID!) { user(id: $id) { name email } }"))
-            .variables(Property.of(Map.of("id", "123")))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("query GetUser($id: ID!) { user(id: $id) { name email } }"))
+            .variables(Property.ofValue(Map.of("id", "123")))
             .build();
 
         RunContext runContext = runContextFactory.of();
@@ -72,9 +72,9 @@ class RequestTest {
         vars.put("email", "admin@example.com");
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("mutation CreateUser($name: String!, $email: String!) { createUser(name: $name, email: $email) { id name } }"))
-            .variables(Property.of(vars))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("mutation CreateUser($name: String!, $email: String!) { createUser(name: $name, email: $email) { id name } }"))
+            .variables(Property.ofValue(vars))
             .build();
 
         RunContext runContext = runContextFactory.of();
@@ -104,9 +104,9 @@ class RequestTest {
         );
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("query GetUserBasic { user(id: \"123\") { id name } } query GetUserDetails { user(id: \"123\") { id details { age location } } }"))
-            .operationName(Property.of("GetUserDetails"))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("query GetUserBasic { user(id: \"123\") { id name } } query GetUserDetails { user(id: \"123\") { id details { age location } } }"))
+            .operationName(Property.ofValue("GetUserDetails"))
             .build();
 
         RunContext runContext = runContextFactory.of();
@@ -133,9 +133,9 @@ class RequestTest {
         );
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("query { users { name } }"))
-            .failOnGraphQLErrors(Property.of(false))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("query { users { name } }"))
+            .failOnGraphQLErrors(Property.ofValue(false))
             .build();
 
         RunContext runContext = runContextFactory.of();
@@ -147,9 +147,9 @@ class RequestTest {
         assertNotNull(output.getError());
 
         Request failingTask = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("query { users { name } }"))
-            .failOnGraphQLErrors(Property.of(true))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("query { users { name } }"))
+            .failOnGraphQLErrors(Property.ofValue(true))
             .build();
 
         RunContext failingRunContext = runContextFactory.of();
@@ -182,9 +182,9 @@ class RequestTest {
 
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("mutation CreateUserWithAddress($input: UserInput!) { createUser(input: $input) { id name } }"))
-            .variables(Property.of(variables))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("mutation CreateUserWithAddress($input: UserInput!) { createUser(input: $input) { id name } }"))
+            .variables(Property.ofValue(variables))
             .build();
 
         RunContext runContext = runContextFactory.of();
@@ -210,9 +210,9 @@ class RequestTest {
         );
 
         Request task = Request.builder()
-            .uri(Property.of("http://localhost:" + wireMock.getPort() + "/graphql"))
-            .query(Property.of("query { sensitiveData }"))
-            .encryptBody(Property.of(true))
+            .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
+            .query(Property.ofValue("query { sensitiveData }"))
+            .encryptBody(Property.ofValue(true))
             .build();
 
         RunContext runContext = runContextFactory.of(Map.of());
