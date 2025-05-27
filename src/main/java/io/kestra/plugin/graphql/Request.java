@@ -116,7 +116,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         title = "If true, the GraphQL response body will be automatically encrypted and decrypted in the outputs.",
         description = "If this property is set to `true`, this task will output the request body using the `encryptedBody` output property; otherwise, the request body will be stored in the `body` output property."
     )
-    private Property<Boolean> encryptBody = Property.of(false);
+    private Property<Boolean> encryptBody = Property.ofValue(false);
 
     @Schema(
         title = "GraphQL query or mutation to execute."
@@ -137,14 +137,14 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
     private Property<String> operationName;
 
     @Builder.Default
-    protected Property<String> method = Property.of("POST");
+    protected Property<String> method = Property.ofValue("POST");
 
     @Builder.Default
     @Schema(
         title = "Fail task on GraphQL errors",
         description = "If true, the task will fail when GraphQL returns errors in the response."
     )
-    private Property<Boolean> failOnGraphQLErrors = Property.of(false);
+    private Property<Boolean> failOnGraphQLErrors = Property.ofValue(false);
 
     @Override
     protected HttpRequest request(RunContext runContext) throws IllegalVariableEvaluationException, URISyntaxException, IOException {
@@ -208,7 +208,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
             String responseBody = response.getBody();
 
             runContext.logger().debug("GraphQL response: {}", responseBody);
-            
+
             if (responseBody != null) {
                 OptionalInt illegalChar = responseBody.chars().filter(c -> !Character.isDefined(c)).findFirst();
                 if (illegalChar.isPresent()) {
