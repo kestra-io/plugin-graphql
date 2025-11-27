@@ -1,0 +1,8 @@
+group: io.kestra.plugin.graphql
+name: "graphql"
+title: "GraphQL"
+description: "This sub-group of plugins contains tasks for making GraphQL requests."
+body: ""
+videos: []
+createdBy: "Kestra Core Team"
+managedBy: "Kestra Core Team"
