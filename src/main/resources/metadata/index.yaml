@@ -1,8 +1,8 @@
 group: io.kestra.plugin.graphql
 name: "graphql"
 title: "GraphQL"
-description: "This sub-group of plugins contains tasks for making GraphQL requests."
-body: ""
+description: "Tasks that send GraphQL queries and mutations over HTTP endpoints."
+body: "Define the GraphQL `url`, `query`, and optional `variables` or custom headers to call APIs, with responses returned as JSON you can store, filter, or pass to downstream tasks."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
