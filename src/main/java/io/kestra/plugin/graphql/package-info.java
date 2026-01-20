@@ -1,7 +1,6 @@
 @PluginSubGroup(
     title = "GraphQl plugin",
     description = "This sub-group of plugins contains tasks for making GraphQL requests.",
-    categories = PluginSubGroup.PluginCategory.OTHER,
     categories = {
         PluginSubGroup.PluginCategory.DATA
     }
