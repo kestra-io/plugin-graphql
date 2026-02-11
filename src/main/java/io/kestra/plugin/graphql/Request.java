@@ -33,7 +33,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Make a GraphQL API request."
+    title = "Execute a GraphQL HTTP request",
+    description = "Sends a rendered GraphQL query or mutation over HTTP (default POST). Supports optional variables and operationName, can encrypt the response body when `encryptBody` is true, and only fails on GraphQL errors if `failOnGraphQLErrors` is enabled."
 )
 @Plugin(
     examples = {
@@ -113,26 +114,27 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
 
     @Builder.Default
     @Schema(
-        title = "If true, the GraphQL response body will be automatically encrypted and decrypted in the outputs.",
-        description = "If this property is set to `true`, this task will output the request body using the `encryptedBody` output property; otherwise, the request body will be stored in the `body` output property."
+        title = "Encrypt response body",
+        description = "When true, stores GraphQL data in the `encryptedBody` output instead of `body`; default is false."
     )
     private Property<Boolean> encryptBody = Property.ofValue(false);
 
     @Schema(
-        title = "GraphQL query or mutation to execute."
+        title = "GraphQL query or mutation",
+        description = "Rendered from the flow context before the request."
     )
     @NotNull
     private Property<String> query;
 
     @Schema(
-        title = "Variables used in the query.",
-        description = "GraphQL variables can be complex objects with nested structures."
+        title = "Variables for the query",
+        description = "Rendered GraphQL variables; supports nested objects."
     )
     private Property<Map<String, Object>> variables;
 
     @Schema(
-        title = "Operation name for the GraphQL query",
-        description = "Used when multiple operations are defined in the query document."
+        title = "Operation name to run",
+        description = "Required when the query document defines multiple operations."
     )
     private Property<String> operationName;
 
@@ -142,7 +144,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
     @Builder.Default
     @Schema(
         title = "Fail task on GraphQL errors",
-        description = "If true, the task will fail when GraphQL returns errors in the response."
+        description = "If true, the task fails when the response contains GraphQL errors; defaults to false."
     )
     private Property<Boolean> failOnGraphQLErrors = Property.ofValue(false);
 
@@ -261,27 +263,27 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         @Schema(title = "The URL of the current request.")
         private final URI uri;
 
-        @Schema(title = "The status code of the response.")
+        @Schema(title = "HTTP status code of the response")
         private final Integer code;
 
-        @Schema(title = "The headers of the response.")
+        @Schema(title = "Response headers")
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The GraphQL data field from the response.",
-            description = "Contains the data returned by the GraphQL server. If the `encryptBody` property is set to `true`, this will be null and the data will be in `encryptedBody`."
+            title = "GraphQL data from the response",
+            description = "Contains the `data` field returned by the GraphQL server. Null when `encryptBody` is true; data is then available in `encryptedBody`."
         )
         private Object body;
 
         @Schema(
-            title = "The GraphQL errors from the response.",
-            description = "Contains any errors returned by the GraphQL server."
+            title = "GraphQL errors from the response",
+            description = "Any errors returned by the GraphQL server."
         )
         private Object error;
 
         @Schema(
-            title = "The encrypted body of the response.",
-            description = "If the `encryptBody` property is set to `true`, this will contain the encrypted response."
+            title = "Encrypted response body",
+            description = "Contains the encrypted response when `encryptBody` is true."
         )
         private EncryptedString encryptedBody;
     }
