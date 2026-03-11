@@ -1,17 +1,20 @@
 package io.kestra.plugin.graphql;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.inject.Inject;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,13 +32,15 @@ class RequestTest {
 
     @Test
     void shouldExecuteBasicQuerySuccessfully() throws Exception {
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .withHeader("Content-Type", containing("application/json"))
-            .withRequestBody(containing("query GetUser"))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"user\": { \"name\": \"admin\", \"email\": \"admin@example.com\" } } }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .withHeader("Content-Type", containing("application/json"))
+                .withRequestBody(containing("query GetUser"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"user\": { \"name\": \"admin\", \"email\": \"admin@example.com\" } } }")
+                )
         );
 
         Request task = Request.builder()
@@ -58,13 +63,15 @@ class RequestTest {
 
     @Test
     void shouldExecuteMutationSuccessfully() throws Exception {
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .withHeader("Content-Type", containing("application/json"))
-            .withRequestBody(containing("mutation CreateUser"))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"createUser\": { \"id\": \"456\", \"name\": \"admin\" } } }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .withHeader("Content-Type", containing("application/json"))
+                .withRequestBody(containing("mutation CreateUser"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"createUser\": { \"id\": \"456\", \"name\": \"admin\" } } }")
+                )
         );
 
         Map<String, Object> vars = new HashMap<>();
@@ -93,14 +100,16 @@ class RequestTest {
     @SuppressWarnings("unchecked")
     void shouldExecuteQueryWithSpecificOperationName() throws Exception {
 
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .withHeader("Content-Type", containing("application/json"))
-            .withRequestBody(containing("operationName"))
-            .withRequestBody(containing("GetUserDetails"))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"user\": { \"id\": \"123\", \"details\": { \"age\": 30, \"location\": \"earth\" } } } }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .withHeader("Content-Type", containing("application/json"))
+                .withRequestBody(containing("operationName"))
+                .withRequestBody(containing("GetUserDetails"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"user\": { \"id\": \"123\", \"details\": { \"age\": 30, \"location\": \"earth\" } } } }")
+                )
         );
 
         Request task = Request.builder()
@@ -125,11 +134,13 @@ class RequestTest {
 
     @Test
     void shouldHandleGraphQLErrorsBasedOnConfiguration() throws Exception {
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"users\": [{ \"name\": \"admin\" }, null] }, \"errors\": [{ \"message\": \"User with ID 2 not found\", \"path\": [\"users\", 1] }] }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"users\": [{ \"name\": \"admin\" }, null] }, \"errors\": [{ \"message\": \"User with ID 2 not found\", \"path\": [\"users\", 1] }] }")
+                )
         );
 
         Request task = Request.builder()
@@ -160,13 +171,15 @@ class RequestTest {
     @Test
     void shouldHandleComplexNestedVariables() throws Exception {
 
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .withRequestBody(matchingJsonPath("$.variables.input.address.street", equalTo("some street")))
-            .withRequestBody(matchingJsonPath("$.variables.input.address.city", equalTo("some city")))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"createUser\": { \"id\": \"789\", \"name\": \"Admin User\" } } }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .withRequestBody(matchingJsonPath("$.variables.input.address.street", equalTo("some street")))
+                .withRequestBody(matchingJsonPath("$.variables.input.address.city", equalTo("some city")))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"createUser\": { \"id\": \"789\", \"name\": \"Admin User\" } } }")
+                )
         );
 
         Map<String, Object> address = new HashMap<>();
@@ -179,7 +192,6 @@ class RequestTest {
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("input", userInput);
-
 
         Request task = Request.builder()
             .uri(Property.ofValue("http://localhost:" + wireMock.getPort() + "/graphql"))
@@ -202,11 +214,13 @@ class RequestTest {
     @Test
     void shouldEncryptRequestBodyWhenEnabled() throws Exception {
 
-        wireMock.stubFor(post(urlEqualTo("/graphql"))
-            .willReturn(aResponse()
-                .withHeader("Content-Type", "application/json")
-                .withBody("{ \"data\": { \"sensitiveData\": \"secret information\" } }")
-            )
+        wireMock.stubFor(
+            post(urlEqualTo("/graphql"))
+                .willReturn(
+                    aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{ \"data\": { \"sensitiveData\": \"secret information\" } }")
+                )
         );
 
         Request task = Request.builder()

@@ -1,5 +1,13 @@
 package io.kestra.plugin.graphql;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpHeaders;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
@@ -12,18 +20,11 @@ import io.kestra.core.models.tasks.common.EncryptedString;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.plugin.core.http.AbstractHttp;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpHeaders;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -175,24 +176,31 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
             }
         }
 
-        requestBuilder.body(HttpRequest.JsonRequestBody.builder()
-            .content(requestPayload)
-            .charset(StandardCharsets.UTF_8)
-            .build());
+        requestBuilder.body(
+            HttpRequest.JsonRequestBody.builder()
+                .content(requestPayload)
+                .charset(StandardCharsets.UTF_8)
+                .build()
+        );
 
         var renderedHeader = runContext.render(this.headers).asMap(CharSequence.class, CharSequence.class);
         if (!renderedHeader.isEmpty()) {
-            requestBuilder.headers(HttpHeaders.of(
-                renderedHeader
-                    .entrySet()
-                    .stream()
-                    .map(throwFunction(e -> new AbstractMap.SimpleEntry<>(
-                            e.getKey().toString(),
-                            runContext.render(e.getValue().toString())
-                        ))
-                    )
-                    .collect(Collectors.groupingBy(AbstractMap.SimpleEntry::getKey, Collectors.mapping(AbstractMap.SimpleEntry::getValue, Collectors.toList()))),
-                (a, b) -> true)
+            requestBuilder.headers(
+                HttpHeaders.of(
+                    renderedHeader
+                        .entrySet()
+                        .stream()
+                        .map(
+                            throwFunction(
+                                e -> new AbstractMap.SimpleEntry<>(
+                                    e.getKey().toString(),
+                                    runContext.render(e.getValue().toString())
+                                )
+                            )
+                        )
+                        .collect(Collectors.groupingBy(AbstractMap.SimpleEntry::getKey, Collectors.mapping(AbstractMap.SimpleEntry::getValue, Collectors.toList()))),
+                    (a, b) -> true
+                )
             );
         }
 
@@ -214,8 +222,10 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
             if (responseBody != null) {
                 OptionalInt illegalChar = responseBody.chars().filter(c -> !Character.isDefined(c)).findFirst();
                 if (illegalChar.isPresent()) {
-                    throw new IllegalArgumentException("Illegal unicode code point in response body: " + illegalChar.getAsInt() +
-                        ", the Request task only supports valid Unicode strings as the response body.");
+                    throw new IllegalArgumentException(
+                        "Illegal unicode code point in response body: " + illegalChar.getAsInt() +
+                            ", the Request task only supports valid Unicode strings as the response body."
+                    );
                 }
             }
 
