@@ -27,6 +27,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
+import io.kestra.core.models.annotations.PluginProperty;
 
 @SuperBuilder
 @ToString
@@ -118,6 +119,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         title = "Encrypt response body",
         description = "When true, stores GraphQL data in the `encryptedBody` output instead of `body`; default is false."
     )
+    @PluginProperty(group = "advanced")
     private Property<Boolean> encryptBody = Property.ofValue(false);
 
     @Schema(
@@ -125,21 +127,25 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         description = "Rendered from the flow context before the request."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> query;
 
     @Schema(
         title = "Variables for the query",
         description = "Rendered GraphQL variables; supports nested objects."
     )
+    @PluginProperty(group = "advanced")
     private Property<Map<String, Object>> variables;
 
     @Schema(
         title = "Operation name to run",
         description = "Required when the query document defines multiple operations."
     )
+    @PluginProperty(group = "advanced")
     private Property<String> operationName;
 
     @Builder.Default
+    @PluginProperty(group = "advanced")
     protected Property<String> method = Property.ofValue("POST");
 
     @Builder.Default
@@ -147,6 +153,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
         title = "Fail task on GraphQL errors",
         description = "If true, the task fails when the response contains GraphQL errors; defaults to false."
     )
+    @PluginProperty(group = "reliability")
     private Property<Boolean> failOnGraphQLErrors = Property.ofValue(false);
 
     @Override
