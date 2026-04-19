@@ -7,8 +7,9 @@
 
 ## Why
 
-- This plugin integrates Kestra with GraphQL.
-- It provides tasks that send GraphQL queries and mutations over HTTP endpoints.
+- What user problem does this solve? Teams need to send GraphQL queries and mutations over HTTP endpoints from orchestrated workflows instead of relying on manual console work, ad hoc scripts, or disconnected schedulers.
+- Why would a team adopt this plugin in a workflow? It keeps GraphQL steps in the same Kestra flow as upstream preparation, approvals, retries, notifications, and downstream systems.
+- What operational/business outcome does it enable? It reduces manual handoffs and fragmented tooling while improving reliability, traceability, and delivery speed for processes that depend on GraphQL.
 
 ## How
 
