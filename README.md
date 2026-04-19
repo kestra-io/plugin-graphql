@@ -35,32 +35,18 @@
 </p>
 <p align="center" style="color:grey;"><i>Get started with Kestra in 4 minutes.</i></p>
 
-
 # Kestra GraphQL Plugin
 
-> Plugin to execute GraphQL queries.
+## Why
 
+- What user problem does this solve? Teams need to send GraphQL queries and mutations over HTTP endpoints from orchestrated workflows instead of relying on manual console work, ad hoc scripts, or disconnected schedulers.
+- Why would a team adopt this plugin in a workflow? It keeps GraphQL steps in the same Kestra flow as upstream preparation, approvals, retries, notifications, and downstream systems.
+- What operational/business outcome does it enable? It reduces manual handoffs and fragmented tooling while improving reliability, traceability, and delivery speed for processes that depend on GraphQL.
 
-![Kestra orchestrator](https://kestra.io/video.gif)
+## What
 
-## Running the project in local
-### Prerequisites
-- Java 21
-- Docker
-
-### Running tests
-```
-./gradlew check --parallel
-```
-
-### Launching the whole app
-```
-./gradlew shadowJar && docker build -t kestra-custom . && docker run --rm -p 8080:8080 kestra-custom server local
-```
-> [!NOTE]
-> You need to relaunch this whole command everytime you make a change to your plugin
-
-go to http://localhost:8080, your plugin will be available to use
+- Provides plugin components under `io.kestra.plugin.graphql`.
+- Includes classes such as `Request`.
 
 ## Documentation
 * Full documentation can be found under: [kestra.io/docs](https://kestra.io/docs)
