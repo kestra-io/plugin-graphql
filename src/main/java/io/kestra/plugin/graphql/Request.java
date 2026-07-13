@@ -277,7 +277,7 @@ public class Request extends AbstractHttp implements RunnableTask<Request.Output
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
 
-        @Schema(title = "The URL of the current request.")
+        @Schema(title = "The URL of the current request")
         private final URI uri;
 
         @Schema(title = "HTTP status code of the response")
