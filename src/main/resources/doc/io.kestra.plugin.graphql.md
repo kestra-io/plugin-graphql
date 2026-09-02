@@ -4,7 +4,7 @@ Execute GraphQL queries and mutations from Kestra flows.
 
 ## Authentication
 
-Set `uri` to your GraphQL endpoint. Pass authentication credentials via `headers` (e.g. an `Authorization` bearer token) or via `options.auth` for basic auth. Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and apply connection properties globally with [plugin defaults](https://kestra.io/docs/workflow-components/plugin-defaults).
+Set `uri` to your GraphQL endpoint. Pass authentication credentials via `headers` (e.g. an `Authorization` bearer token) or via `options.auth` for basic auth. Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and set connection properties on each task.
 
 ## Tasks
 
